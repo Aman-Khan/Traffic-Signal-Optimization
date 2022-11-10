@@ -4,6 +4,9 @@ from datetime import date
 from datetime import datetime
 from matplotlib import pyplot as plt
 
+####################################
+#    Take input to track road      #
+####################################
 cap = cv2.VideoCapture('video.mp4')
 
 while(cap.isOpened()):
@@ -11,13 +14,12 @@ while(cap.isOpened()):
     cv2.imshow('Live Capture', frame)
     
     if(cv2.waitKey(1)==ord('s')):
-        cv2.imwrite('road_Data.jpg', frame)
+        cv2.imwrite('road_Data.jpg', frame) #capture frame
         break
 cap.release()
 cv2.destroyAllWindows()
 
-
-points = []
+points = [] #store coordinates of road for counter line
 def click_event(event, x, y, flag, prama):
     if(len(points)<2):
         if event == cv2.EVENT_LBUTTONDOWN:
@@ -33,7 +35,7 @@ def click_event(event, x, y, flag, prama):
         
         
 
-img = cv2.imread('road_Data.jpg')
+img = cv2.imread('road_Data.jpg') #show track coordinates
 cv2.imshow('Track Road',img)
 cv2.setMouseCallback('Track Road', click_event)
 if(cv2.waitKey(0)==ord('q')):
@@ -41,7 +43,7 @@ if(cv2.waitKey(0)==ord('q')):
 
 print(points)
 
-cap=cv2.VideoCapture('video.mp4')
+cap=cv2.VideoCapture('video.mp4') 
 algo=cv2.createBackgroundSubtractorMOG2()
 
 count_line_position=550
