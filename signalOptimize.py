@@ -1,49 +1,57 @@
+from ctypes import pointer
 import cv2
 import numpy as np
 from datetime import date
 from datetime import datetime
 from matplotlib import pyplot as plt
 
-####################################
-#    Take input to track road      #
-####################################
-cap = cv2.VideoCapture('video.mp4')
 
-while(cap.isOpened()):
-    ret, frame=cap.read()
-    cv2.imshow('Live Capture', frame)
+#### Setup ####
+# def click_event(event, x, y, flag, prama):
+#     if(len(points)<4):
+#         if event == cv2.EVENT_LBUTTONDOWN:
+#             font = cv2.FONT_HERSHEY_SIMPLEX
+#             strxy = '* '+str(x)+' '+str(y)
+#             cv2.putText(img, strxy, (x,y), font, 0.5, (0,0,255), 1, cv2.LINE_AA)        
+#             cv2.imshow('Track Road',img)
+#             points.append((x,y))
+#     else:
+#         cv2.line(img, points[0], points[1], (0,255,0), 2, cv2.LINE_AA)
+#         cv2.line(img, points[1], points[2], (0,255,0), 2, cv2.LINE_AA)
+#         cv2.line(img, points[2], points[3], (0,255,0), 2, cv2.LINE_AA)
+#         print("**Coordinates Saved**")
+#         cv2.imshow('Track Road',img)
+
+
+# print('╔'+''.center(28,'═')+'╗')
+# print('║ Set Coordinates by marking ║')
+# print('╚'+''.center(28,'═')+'╝')
+
+# points = []
+
+# cap = cv2.VideoCapture('video.mp4')
+# while(cap.isOpened()):
+#     ret, frame=cap.read()
+#     cv2.imshow('Live Capture', frame)
     
-    if(cv2.waitKey(1)==ord('s')):
-        cv2.imwrite('road_Data.jpg', frame) #capture frame
-        break
-cap.release()
-cv2.destroyAllWindows()
+#     if(cv2.waitKey(1)==ord('s')):
+#         cv2.imwrite('road_Data.jpg', frame)
+#         break
+# cap.release()
+# cv2.destroyAllWindows()
 
-points = [] #store coordinates of road for counter line
-def click_event(event, x, y, flag, prama):
-    if(len(points)<2):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            strxy = '* '+str(x)+' '+str(y)
-            cv2.putText(img, strxy, (x,y), font, 0.5, (0,0,255), 1, cv2.LINE_AA)        
-            cv2.imshow('Track Road',img)
-            points.append((x,y))
-    else:
-        print("**Coordinates Saved**")
-        cv2.line(img, points[0], points[1], (0,255,0), 2, cv2.LINE_AA)
-        cv2.imshow('Track Road',img)
-        
-        
+# img = cv2.imread('road_Data.jpg')
+# cv2.imshow('Track Road',img)
+# cv2.setMouseCallback('Track Road', click_event)
+# if(cv2.waitKey(0)==ord('q')):
+#     cv2.destroyAllWindows()
 
-img = cv2.imread('road_Data.jpg') #show track coordinates
-cv2.imshow('Track Road',img)
-cv2.setMouseCallback('Track Road', click_event)
-if(cv2.waitKey(0)==ord('q')):
-    cv2.destroyAllWindows()
+endCoordinates = [(5, 597), (337, 343), (772, 344), (1157, 709)]
+counterLine = [(337, 343), (772, 344)]
 
-print(points)
+cap=cv2.VideoCapture('video.mp4')
+cap2=cv2.VideoCapture('video.mp4')
 
-cap=cv2.VideoCapture('video.mp4') 
 algo=cv2.createBackgroundSubtractorMOG2()
 
 count_line_position=550
@@ -63,6 +71,7 @@ counter=0
 
 while True:
     ret,frame1 = cap.read()
+    
     grey=cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
     blur=cv2.GaussianBlur(grey,(3,3),3)
     img_sub=algo.apply(blur)
@@ -73,10 +82,10 @@ while True:
     counterShape,_=cv2.findContours(dilatada,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 
     # cv2.line(frame1,(70,count_line_position),(980,count_line_position),(255,255,255),3)
-    cv2.line(frame1,points[0],points[1],(255,255,255),3)
+    cv2.line(frame1,counterLine[0],counterLine[1],(255,255,255),3)
 
-    cv2.line(frame1, (-150,730), (70,550), (25,0,255), 3, cv2.LINE_AA)
-    cv2.line(frame1, (1175,730), (980,550), (25,0,255), 3, cv2.LINE_AA)
+    cv2.line(frame1, endCoordinates[0], endCoordinates[1], (0,255,0), 3, cv2.LINE_AA)
+    cv2.line(frame1, endCoordinates[2], endCoordinates[3], (0,255,0), 3, cv2.LINE_AA)
 
 
     for (i,c) in enumerate(counterShape):
@@ -84,7 +93,7 @@ while True:
         validate_counter = (w>=min_width_react) and (h>=min_height_react)
         if not validate_counter:
             continue
-        cv2.rectangle(frame1,(x,y),(x+w,y+h),(0,255,0),2)
+        # cv2.rectangle(frame1,(x,y),(x+w,y+h),(0,255,0),2)
 
         center=center_handle(x,y,w,h)
         detect.append(center)
@@ -94,7 +103,7 @@ while True:
             if y<(count_line_position+offset) and y>(count_line_position-offset):
                 counter+=1
                 # cv2.line(frame1,(70,count_line_position),(980,count_line_position),(0,127,255),3)
-                cv2.line(frame1,points[0],points[1],(0,127,255),3)
+                cv2.line(frame1,counterLine[0],counterLine[1],(0,127,255),3)
 
                 detect.remove((x,y))
                 print("VEHICLE COUNTER "+str(counter))
@@ -111,3 +120,19 @@ while True:
 
 cv2.destroyAllWindows()
 cap.release()
+
+
+
+# # track corrdinates
+# img = cv2.imread('road_Data.jpg', 1)
+# img = cv2.cvtColor(img, cv2.CALIB_CB_ACCURACY)
+# plt.imshow(img)
+# plt.xticks([])
+# plt.yticks([])
+# plt.show()
+# if(cv2.waitKey(0)==ord('q')):
+#     img.release()
+#     cv2.destroyAllWindows()
+        
+
+
