@@ -1,49 +1,17 @@
+from email.mime import image
+from multiprocessing.connection import wait
+from sys import flags
 import cv2
+import time
 import numpy as np
 from datetime import date
 from datetime import datetime
-from matplotlib import pyplot as plt
 
-####################################
-#    Take input to track road      #
-####################################
-cap = cv2.VideoCapture('video.mp4')
+endCoordinates = [(5, 597), (337, 343), (772, 344), (1157, 709)]
+counterLine = [(337, 343), (772, 344)]
 
-while(cap.isOpened()):
-    ret, frame=cap.read()
-    cv2.imshow('Live Capture', frame)
-    
-    if(cv2.waitKey(1)==ord('s')):
-        cv2.imwrite('road_Data.jpg', frame) #capture frame
-        break
-cap.release()
-cv2.destroyAllWindows()
+cap=cv2.VideoCapture('video.mp4')
 
-points = [] #store coordinates of road for counter line
-def click_event(event, x, y, flag, prama):
-    if(len(points)<2):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            strxy = '* '+str(x)+' '+str(y)
-            cv2.putText(img, strxy, (x,y), font, 0.5, (0,0,255), 1, cv2.LINE_AA)        
-            cv2.imshow('Track Road',img)
-            points.append((x,y))
-    else:
-        print("**Coordinates Saved**")
-        cv2.line(img, points[0], points[1], (0,255,0), 2, cv2.LINE_AA)
-        cv2.imshow('Track Road',img)
-        
-        
-
-img = cv2.imread('road_Data.jpg') #show track coordinates
-cv2.imshow('Track Road',img)
-cv2.setMouseCallback('Track Road', click_event)
-if(cv2.waitKey(0)==ord('q')):
-    cv2.destroyAllWindows()
-
-print(points)
-
-cap=cv2.VideoCapture('video.mp4') 
 algo=cv2.createBackgroundSubtractorMOG2()
 
 count_line_position=550
@@ -60,9 +28,18 @@ def center_handle(x,y,w,h):
 detect=[]
 offset=6
 counter=0
+flag=True
 
-while True:
+
+start = time.localtime().tm_sec
+dur = 10
+
+wig = True
+redi = True
+
+while flag:
     ret,frame1 = cap.read()
+    realt = time.time()
     grey=cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
     blur=cv2.GaussianBlur(grey,(3,3),3)
     img_sub=algo.apply(blur)
@@ -72,11 +49,10 @@ while True:
     dilatada=cv2.morphologyEx(dilatada,cv2.MORPH_CLOSE,kernel)
     counterShape,_=cv2.findContours(dilatada,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 
-    # cv2.line(frame1,(70,count_line_position),(980,count_line_position),(255,255,255),3)
-    cv2.line(frame1,points[0],points[1],(255,255,255),3)
+    cv2.line(frame1,counterLine[0],counterLine[1],(255,255,255),3)
 
-    cv2.line(frame1, (-150,730), (70,550), (25,0,255), 3, cv2.LINE_AA)
-    cv2.line(frame1, (1175,730), (980,550), (25,0,255), 3, cv2.LINE_AA)
+    cv2.line(frame1, endCoordinates[0], endCoordinates[1], (0,255,0), 3, cv2.LINE_AA)
+    cv2.line(frame1, endCoordinates[2], endCoordinates[3], (0,255,0), 3, cv2.LINE_AA)
 
 
     for (i,c) in enumerate(counterShape):
@@ -84,7 +60,7 @@ while True:
         validate_counter = (w>=min_width_react) and (h>=min_height_react)
         if not validate_counter:
             continue
-        cv2.rectangle(frame1,(x,y),(x+w,y+h),(0,255,0),2)
+        # cv2.rectangle(frame1,(x,y),(x+w,y+h),(0,255,0),2)
 
         center=center_handle(x,y,w,h)
         detect.append(center)
@@ -93,21 +69,53 @@ while True:
         for (x,y) in detect:
             if y<(count_line_position+offset) and y>(count_line_position-offset):
                 counter+=1
-                # cv2.line(frame1,(70,count_line_position),(980,count_line_position),(0,127,255),3)
-                cv2.line(frame1,points[0],points[1],(0,127,255),3)
+                cv2.line(frame1,counterLine[0],counterLine[1],(0,127,255),3)
 
                 detect.remove((x,y))
-                print("VEHICLE COUNTER "+str(counter))
-        #counter has value of num of vehicle
+                # print("VEHICLE COUNTER "+str(counter))
+
     today = date.today()
     now = datetime.now()
     cv2.putText(frame1,"VEHICLE COUNTER : "+str(counter),(900,50),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255), 2, cv2.LINE_AA)
     cv2.putText(frame1, now.strftime("%H:%M:%S"), (10,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 1, cv2.LINE_AA)
     cv2.putText(frame1, today.strftime("%d-%m-%y"), (90,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 1, cv2.LINE_AA)
-    
+    cv2.rectangle(frame1,(70,72),(90,210),(0,0,0),50, cv2.LINE_AA)
+
+    if(time.localtime().tm_sec>=start+dur-2 and time.localtime().tm_sec<start+dur):
+        cv2.circle(frame1,(80,140),10,(0,255,255),30, cv2.LINE_AA)
+        if(counter!=0 and wig==True):
+            print("Total vehicle : ",counter)
+            counter=0
+            wig=False
+    elif(time.localtime().tm_sec>=start+dur):
+        if(int(realt)%2==0):
+            cv2.circle(frame1,(80,200),10,(0,255,0),30, cv2.LINE_AA)
+            counter=0
+    else:
+        cv2.circle(frame1,(80,80),10,(0,0,255),30, cv2.LINE_AA)
+        # cv2.putText(frame1,"VEHICLE COUNTER : "+str(counter),(900,50),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255), 2, cv2.LINE_AA)
+        wig=True
     cv2.imshow('Video original',frame1)
+    
     if cv2.waitKey(1)==ord('q'):
         break
 
 cv2.destroyAllWindows()
 cap.release()
+
+
+
+# cap = np.zeros([512,512,3], np.uint8)
+# vid=cv2.VideoCapture('video.mp4')
+# start=time.time()
+# flags = True
+# while(True):
+#     ret, cap=vid.read()
+#     realt = time.time()
+#     btime=2
+    # if(int(realt)%2==0):
+    #     cv2.circle(cap,(80,200),10,(0,255,0),30, cv2.LINE_AA) #green
+#     cv2.imshow('blinks', cap)
+#     if(cv2.waitKey(1)==ord('q')):
+#         cv2.destroyAllWindows()
+#         break
