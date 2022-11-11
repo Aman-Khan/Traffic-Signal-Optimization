@@ -21,3 +21,9 @@ by using camera program will capture and process every frame by using background
 &nbsp&nbsp&nbsp&nbsp -- <a href="https://github.com/Aman-Khan/Traffic-Signal-Optimization/blob/main/data/1.3_setup.png">Red Signal</a><br>
 &nbsp&nbsp&nbsp&nbsp -- <a href="https://github.com/Aman-Khan/Traffic-Signal-Optimization/blob/main/data/2.1_setup.png">Green Signal</a>
 
+contributor
+ig - @eww.dex
+ig - @_.demon0804._
+
+special thanks 
+ig - @codewithkiran_
