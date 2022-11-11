@@ -1,18 +1,9 @@
-from email.mime import image
-from multiprocessing.connection import wait
-from sys import flags
-import cv2
-import time
-import numpy as np
-from datetime import date
-from datetime import datetime
+endCoordinates = [(5, 597), (337, 343), (772, 344), (1157, 709)] #to display end points of road
+counterLine = [(337, 343), (772, 344)] #coordinates are use for define counter line on road
 
-endCoordinates = [(5, 597), (337, 343), (772, 344), (1157, 709)]
-counterLine = [(337, 343), (772, 344)]
+cap=cv2.VideoCapture('video.mp4') #using sample video for demo (change attribute to 0 to get data from live camera)
 
-cap=cv2.VideoCapture('video.mp4')
-
-algo=cv2.createBackgroundSubtractorMOG2()
+algo=cv2.createBackgroundSubtractorMOG2() #using background substraction algorithm to track vehicle
 
 count_line_position=550
 min_width_react=80
@@ -28,18 +19,19 @@ def center_handle(x,y,w,h):
 detect=[]
 offset=6
 counter=0
+
 flag=True
 
-
-start = time.localtime().tm_sec
 dur = 10
-
-wig = True
-redi = True
+start = time.time()
+g_time = 5
+v_cnt = True
 
 while flag:
     ret,frame1 = cap.read()
-    realt = time.time()
+    swtime = "{:02d}".format(dur-int(time.time()-start))
+
+
     grey=cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
     blur=cv2.GaussianBlur(grey,(3,3),3)
     img_sub=algo.apply(blur)
@@ -60,7 +52,7 @@ while flag:
         validate_counter = (w>=min_width_react) and (h>=min_height_react)
         if not validate_counter:
             continue
-        # cv2.rectangle(frame1,(x,y),(x+w,y+h),(0,255,0),2)
+        # cv2.rectangle(frame1,(x,y),(x+w,y+h),(0,255,0),2) #to show contour on vehicel
 
         center=center_handle(x,y,w,h)
         detect.append(center)
@@ -72,29 +64,33 @@ while flag:
                 cv2.line(frame1,counterLine[0],counterLine[1],(0,127,255),3)
 
                 detect.remove((x,y))
-                # print("VEHICLE COUNTER "+str(counter))
 
     today = date.today()
     now = datetime.now()
-    cv2.putText(frame1,"VEHICLE COUNTER : "+str(counter),(900,50),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255), 2, cv2.LINE_AA)
     cv2.putText(frame1, now.strftime("%H:%M:%S"), (10,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 1, cv2.LINE_AA)
     cv2.putText(frame1, today.strftime("%d-%m-%y"), (90,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 1, cv2.LINE_AA)
     cv2.rectangle(frame1,(70,72),(90,210),(0,0,0),50, cv2.LINE_AA)
 
-    if(time.localtime().tm_sec>=start+dur-2 and time.localtime().tm_sec<start+dur):
-        cv2.circle(frame1,(80,140),10,(0,255,255),30, cv2.LINE_AA)
-        if(counter!=0 and wig==True):
-            print("Total vehicle : ",counter)
-            counter=0
-            wig=False
-    elif(time.localtime().tm_sec>=start+dur):
-        if(int(realt)%2==0):
-            cv2.circle(frame1,(80,200),10,(0,255,0),30, cv2.LINE_AA)
-            counter=0
-    else:
+    cv2.putText(frame1,"VEHICLE COUNTER : "+str(counter),(900,50),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255), 2, cv2.LINE_AA)
+
+    if(time.time()<=start+dur-3):
         cv2.circle(frame1,(80,80),10,(0,0,255),30, cv2.LINE_AA)
-        # cv2.putText(frame1,"VEHICLE COUNTER : "+str(counter),(900,50),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255), 2, cv2.LINE_AA)
-        wig=True
+        cv2.putText(frame1, swtime, (60,89), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+    elif(time.time()>start+dur-3 and time.time()<=start+dur):
+        cv2.circle(frame1,(80,140),10,(0,255,255),30, cv2.LINE_AA)
+        cv2.putText(frame1, swtime, (60,149), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+        if(v_cnt==True):
+            print("Total vehicle : ",counter) #return total vehicel after red signal        
+            v_cnt=False
+    else:
+        v_cnt=True
+        counter=0
+
+        cv2.circle(frame1,(80,200),10,(0,255,0),30, cv2.LINE_AA)
+        cv2.putText(frame1, "{:02d}".format(int(swtime)+g_time), (60,209), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2, cv2.LINE_AA)
+        if(int(swtime)+g_time<=0):
+            start=time.time() #receive another red signal input
+
     cv2.imshow('Video original',frame1)
     
     if cv2.waitKey(1)==ord('q'):
@@ -102,20 +98,3 @@ while flag:
 
 cv2.destroyAllWindows()
 cap.release()
-
-
-
-# cap = np.zeros([512,512,3], np.uint8)
-# vid=cv2.VideoCapture('video.mp4')
-# start=time.time()
-# flags = True
-# while(True):
-#     ret, cap=vid.read()
-#     realt = time.time()
-#     btime=2
-    # if(int(realt)%2==0):
-    #     cv2.circle(cap,(80,200),10,(0,255,0),30, cv2.LINE_AA) #green
-#     cv2.imshow('blinks', cap)
-#     if(cv2.waitKey(1)==ord('q')):
-#         cv2.destroyAllWindows()
-#         break
