@@ -20,10 +20,10 @@ by using camera program will capture and process every frame by using background
 <h3><a href="https://github.com/Aman-Khan/Traffic-Signal-Optimization/blob/main/signalOptimize.py">signalOptimize.py</a></h3>
 &nbsp&nbsp&nbsp&nbsp -- <a href="https://github.com/Aman-Khan/Traffic-Signal-Optimization/blob/main/data/1.3_setup.png">Red Signal</a><br>
 &nbsp&nbsp&nbsp&nbsp -- <a href="https://github.com/Aman-Khan/Traffic-Signal-Optimization/blob/main/data/2.1_setup.png">Green Signal</a>
-
-contributor
-ig - @eww.dex
-ig - @_.demon0804._
-
-special thanks 
+<br><br>
+contributor <br>
+ig - @_.demon0804._ <br>
+ig - @eww.dex <br>
+<br>
+special thanks <br>
 ig - @codewithkiran_
