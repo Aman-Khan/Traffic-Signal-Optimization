@@ -1,3 +1,6 @@
+import cv2 
+import time
+
 endCoordinates = [(5, 597), (337, 343), (772, 344), (1157, 709)] #to display end points of road
 counterLine = [(337, 343), (772, 344)] #coordinates are use for define counter line on road
 
